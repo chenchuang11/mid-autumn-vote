@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中秋晚会节目投票系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .voting-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .results-section {
+            flex: 2;
+            min-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .program-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .program-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .program-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+        
+        .program-item.selected {
+            background: rgba(46, 204, 113, 0.4);
+            border: 2px solid #2ecc71;
+        }
+        
+        .program-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .vote-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .vote-btn:hover {
+            background: #27ae60;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .vote-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+        
+        .vote-count {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .vote-count-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .vote-count-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .vote-count-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+        
+        .vote-count-name {
+            font-size: 1rem;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .qr-code img {
+            max-width: 150px;
+            border-radius: 10px;
+            border: 3px solid white;
+        }
+        
+        .admin-section {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .admin-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .admin-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .admin-btn.reset {
+            background: #e67e22;
+        }
+        
+        .admin-btn.add {
+            background: #3498db;
+        }
+        
+        .admin-btn.delete {
+            background: #e74c3c;
+        }
+        
+        .clear-storage {
+            background: #9b59b6;
+        }
+        
+        .program-manager {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .program-manager h3 {
+            margin-bottom: 10px;
+            color: #f1c40f;
+        }
+        
+        .program-manager-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .program-manager-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .program-manager-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .delete-program-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        
+        .delete-program-btn:hover {
+            background: #c0392b;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .voting-section, .results-section {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .vote-count {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>中秋晚会节目投票系统</h1>
+            <p class="description">请选择您最喜欢的节目进行投票，实时结果将在大屏幕显示</p>
+        </header>
+        
+        <div class="main-content">
+            <section class="voting-section">
+                <h2>投票区</h2>
+                <p>请选择一个您最喜欢的节目：</p>
+                
+                <div class="program-list" id="programList">
+                    <!-- 节目列表将通过JavaScript动态生成 -->
+                </div>
+                
+                <button class="vote-btn" id="voteBtn" disabled>提交投票</button>
+                
+                <div class="instructions">
+                    <p><strong>投票说明：</strong></p>
+                    <p>1. 每个设备只能投票一次</p>
+                    <p>2. 投票后无法更改选择</p>
+                    <p>3. 结果将实时在大屏幕更新</p>
+                    <p>4. 如果显示"已投票"，请点击下方"清除投票状态"</p>
+                </div>
+                
+                <div class="qr-code">
+                    <p>扫描二维码参与投票</p>
+                    <img src="中秋晚会节目投票系统.jpg" alt="中秋晚会投票二维码" style="width:150px;height:150px;border-radius:10px;">
+                    <p style="font-size:0.8rem;margin-top:10px;">如果二维码无法识别，请将网页部署到互联网</p>
+                </div>
+            </section>
+            
+            <section class="results-section">
+                <h2>实时投票结果</h2>
+                <p>当前各节目得票情况：</p>
+                
+                <div class="chart-container">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+                
+                <div class="vote-count" id="voteCount">
+                    <!-- 票数统计将通过JavaScript动态生成 -->
+                </div>
+            </section>
+        </div>
+        
+        <section class="admin-section">
+            <h2>管理员控制面板</h2>
+            <p>系统管理功能：</p>
+            <div class="admin-controls">
+                <button class="admin-btn reset" id="resetVotes">重置所有票数</button>
+                <button class="admin-btn add" id="addProgram">添加新节目</button>
+                <button class="admin-btn delete" id="deleteProgram">删除节目</button>
+                <button class="admin-btn" id="exportData">导出数据</button>
+                <button class="admin-btn clear-storage" id="clearStorage">清除投票状态</button>
+            </div>
+            
+            <div class="program-manager">
+                <h3>节目管理</h3>
+                <p>当前节目列表：</p>
+                <div class="program-manager-list" id="programManagerList">
+                    <!-- 节目管理列表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <div style="margin-top:15px;padding:10px;background:rgba(255,255,255,0.1);border-radius:5px;">
+                <p><strong>部署说明：</strong>如需微信扫码，请将网页上传到GitHub Pages或Netlify</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ==================== 后端API模拟 ====================
+        
+        // 使用localStorage模拟数据库
+        const DB_KEY = 'voteSystemData';
+        const VOTED_KEY = 'hasVoted';
+        
+        // 初始节目数据
+        const defaultPrograms = [
+            { id: 1, name: "开场舞蹈《欢乐颂》", votes: 0 },
+            { id: 2, name: "歌曲演唱《夜空中最亮的星》", votes: 0 },
+            { id: 3, name: "小品《办公室趣事》", votes: 0 },
+            { id: 4, name: "乐器演奏《月光下的凤尾竹》", votes: 0 },
+            { id: 5, name: "魔术表演《奇幻世界》", votes: 0 },
+            { id: 6, name: "诗歌朗诵《青春万岁》", votes: 0 }
+        ];
+        
+        // 数据库API
+        const DatabaseAPI = {
+            // 获取所有节目数据
+            getPrograms() {
+                const data = localStorage.getItem(DB_KEY);
+                if (data) {
+                    return JSON.parse(data);
+                } else {
+                    // 初始化数据
+                    this.savePrograms(defaultPrograms);
+                    return defaultPrograms;
+                }
+            },
+            
+            // 保存节目数据
+            savePrograms(programs) {
+                localStorage.setItem(DB_KEY, JSON.stringify(programs));
+            },
+            
+            // 检查用户是否已投票
+            hasVoted() {
+                return localStorage.getItem(VOTED_KEY) === 'true';
+            },
+            
+            // 标记用户已投票
+            setVoted() {
+                localStorage.setItem(VOTED_KEY, 'true');
+            },
+            
+            // 清除投票状态
+            clearVoteStatus() {
+                localStorage.removeItem(VOTED_KEY);
+                return true;
+            },
+            
+            // 重置所有票数
+            resetVotes() {
+                const programs = this.getPrograms();
+                programs.forEach(program => {
+                    program.votes = 0;
+                });
+                this.savePrograms(programs);
+                this.clearVoteStatus();
+                return programs;
+            },
+            
+            // 添加新节目
+            addProgram(name) {
+                const programs = this.getPrograms();
+                const newId = programs.length > 0 ? Math.max(...programs.map(p => p.id)) + 1 : 1;
+                programs.push({
+                    id: newId,
+                    name: name,
+                    votes: 0
+                });
+                this.savePrograms(programs);
+                return programs;
+            },
+            
+            // 删除节目
+            deleteProgram(programId) {
+                const programs = this.getPrograms();
+                const programIndex = programs.findIndex(p => p.id === programId);
+                
+                if (programIndex !== -1) {
+                    const deletedProgram = programs.splice(programIndex, 1)[0];
+                    this.savePrograms(programs);
+                    return { success: true, message: `节目"${deletedProgram.name}"已删除` };
+                } else {
+                    return { success: false, message: "节目不存在！" };
+                }
+            },
+            
+            // 为节目投票
+            voteForProgram(programId) {
+                if (this.hasVoted()) {
+                    return { success: false, message: "您已经投过票了！" };
+                }
+                
+                const programs = this.getPrograms();
+                const program = programs.find(p => p.id === programId);
+                
+                if (program) {
+                    program.votes += 1;
+                    this.savePrograms(programs);
+                    this.setVoted();
+                    return { success: true, message: "投票成功！" };
+                } else {
+                    return { success: false, message: "节目不存在！" };
+                }
+            },
+            
+            // 导出数据
+            exportData() {
+                const programs = this.getPrograms();
+                let csvContent = "节目名称,票数\n";
+                programs.forEach(program => {
+                    csvContent += `"${program.name}",${program.votes}\n`;
+                });
+                
+                // 创建下载链接
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", "中秋晚会投票结果.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+        
+        // ==================== 前端应用逻辑 ====================
+        
+        // 图表实例
+        let resultsChart = null;
+        
+        // 当前选中的节目ID
+        let selectedProgramId = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+        
+        // 初始化应用
+        function initializeApp() {
+            initializeProgramList();
+            initializeProgramManagerList();
+            initializeChart();
+            updateVoteCount();
+            checkVoteStatus();
+            
+            // 绑定事件
+            document.getElementById('voteBtn').addEventListener('click', handleVote);
+            document.getElementById('resetVotes').addEventListener('click', handleResetVotes);
+            document.getElementById('addProgram').addEventListener('click', handleAddProgram);
+            document.getElementById('deleteProgram').addEventListener('click', handleDeleteProgram);
+            document.getElementById('exportData').addEventListener('click', handleExportData);
+            document.getElementById('clearStorage').addEventListener('click', handleClearStorage);
+        }
+        
+        // 初始化节目列表
+        function initializeProgramList() {
+            const programList = document.getElementById('programList');
+            programList.innerHTML = '';
+            
+            const programs = DatabaseAPI.getPrograms();
+            
+            programs.forEach(program => {
+                const programItem = document.createElement('div');
+                programItem.className = 'program-item';
+                programItem.dataset.id = program.id;
+                
+                programItem.innerHTML = `
+                    <div class="program-name">${program.name}</div>
+                    <div class="program-votes">${program.votes}票</div>
+                `;
+                
+                // 如果用户已投票，禁用点击
+                if (!DatabaseAPI.hasVoted()) {
+                    programItem.addEventListener('click', function() {
+                        selectProgram(program.id);
+                    });
+                } else {
+                    programItem.style.cursor = 'not-allowed';
+                    programItem.style.opacity = '0.7';
+                }
+                
+                programList.appendChild(programItem);
+            });
+        }
+        
+        // 初始化节目管理列表
+        function initializeProgramManagerList() {
+            const programManagerList = document.getElementById('programManagerList');
+            programManagerList.innerHTML = '';
+            
+            const programs = DatabaseAPI.getPrograms();
+            
+            if (programs.length === 0) {
+                programManagerList.innerHTML = '<p style="text-align:center;padding:10px;">暂无节目</p>';
+                return;
+            }
+            
+            programs.forEach(program => {
+                const programItem = document.createElement('div');
+                programItem.className = 'program-manager-item';
+                
+                programItem.innerHTML = `
+                    <div class="program-manager-name">${program.name}</div>
+                    <div>
+                        <span style="color:#f1c40f;margin-right:10px;">${program.votes}票</span>
+                        <button class="delete-program-btn" data-id="${program.id}">删除</button>
+                    </div>
+                `;
+                
+                // 绑定删除按钮事件
+                const deleteBtn = programItem.querySelector('.delete-program-btn');
+                deleteBtn.addEventListener('click', function() {
+                    const programId = parseInt(this.dataset.id);
+                    handleDeleteSpecificProgram(programId);
+                });
+                
+                programManagerList.appendChild(programItem);
+            });
+        }
+        
+        // 选择节目
+        function selectProgram(programId) {
+            selectedProgramId = programId;
+            
+            // 更新UI显示选中的节目
+            document.querySelectorAll('.program-item').forEach(item => {
+                if (parseInt(item.dataset.id) === programId) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            
+            // 启用投票按钮
+            document.getElementById('voteBtn').disabled = false;
+        }
+        
+        // 初始化图表
+        function initializeChart() {
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            const programs = DatabaseAPI.getPrograms();
+            
+            const colors = generateColors(programs.length);
+            
+            resultsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: programs.map(p => p.name),
+                    datasets: [{
+                        label: '得票数',
+                        data: programs.map(p => p.votes),
+                        backgroundColor: colors.bgColors,
+                        borderColor: colors.brColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'white',
+                                precision: 0
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'white',
+                                maxRotation: 45,
+                                minRotation: 0
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 完全重新创建图表（当添加或删除节目时调用）
+        function recreateChart() {
+            if (resultsChart) {
+                resultsChart.destroy();
+            }
+            initializeChart();
+        }
+        
+        // 更新票数统计
+        function updateVoteCount() {
+            const voteCount = document.getElementById('voteCount');
+            voteCount.innerHTML = '';
+            
+            const programs = DatabaseAPI.getPrograms();
+            
+            programs.forEach(program => {
+                const voteCountItem = document.createElement('div');
+                voteCountItem.className = 'vote-count-item';
+                
+                voteCountItem.innerHTML = `
+                    <div class="vote-count-number">${program.votes}</div>
+                    <div class="vote-count-name">${program.name}</div>
+                `;
+                
+                voteCount.appendChild(voteCountItem);
+            });
+        }
+        
+        // 处理投票
+        function handleVote() {
+            if (selectedProgramId) {
+                const result = DatabaseAPI.voteForProgram(selectedProgramId);
+                
+                if (result.success) {
+                    alert(result.message);
+                    updateDisplay();
+                    checkVoteStatus();
+                } else {
+                    alert(result.message);
+                }
+            }
+        }
+        
+        // 更新显示
+        function updateDisplay() {
+            updateChart();
+            updateVoteCount();
+            updateProgramList();
+            updateProgramManagerList();
+        }
+        
+        // 更新图表数据
+        function updateChart() {
+            const programs = DatabaseAPI.getPrograms();
+            resultsChart.data.labels = programs.map(p => p.name);
+            resultsChart.data.datasets[0].data = programs.map(p => p.votes);
+            
+            // 更新颜色
+            const colors = generateColors(programs.length);
+            resultsChart.data.datasets[0].backgroundColor = colors.bgColors;
+            resultsChart.data.datasets[0].borderColor = colors.brColors;
+            
+            resultsChart.update();
+        }
+        
+        // 生成动态颜色函数
+        function generateColors(count) {
+            const colors = [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(199, 199, 199, 0.7)',
+                'rgba(83, 102, 255, 0.7)',
+                'rgba(40, 159, 64, 0.7)',
+                'rgba(210, 99, 132, 0.7)',
+                'rgba(54, 62, 235, 0.7)',
+                'rgba(255, 106, 86, 0.7)'
+            ];
+            
+            const borderColors = [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(199, 199, 199, 1)',
+                'rgba(83, 102, 255, 1)',
+                'rgba(40, 159, 64, 1)',
+                'rgba(210, 99, 132, 1)',
+                'rgba(54, 62, 235, 1)',
+                'rgba(255, 106, 86, 1)'
+            ];
+            
+            // 如果节目数量超过预设颜色，循环使用颜色
+            const bgColors = [];
+            const brColors = [];
+            
+            for (let i = 0; i < count; i++) {
+                bgColors.push(colors[i % colors.length]);
+                brColors.push(borderColors[i % borderColors.length]);
+            }
+            
+            return { bgColors, brColors };
+        }
+        
+        // 更新节目列表中的票数显示
+        function updateProgramList() {
+            const programs = DatabaseAPI.getPrograms();
+            
+            document.querySelectorAll('.program-item').forEach(item => {
+                const programId = parseInt(item.dataset.id);
+                const program = programs.find(p => p.id === programId);
+                if (program) {
+                    item.querySelector('.program-votes').textContent = `${program.votes}票`;
+                }
+            });
+        }
+        
+        // 更新节目管理列表
+        function updateProgramManagerList() {
+            initializeProgramManagerList();
+        }
+        
+        // 检查投票状态
+        function checkVoteStatus() {
+            if (DatabaseAPI.hasVoted()) {
+                document.getElementById('voteBtn').disabled = true;
+                document.getElementById('voteBtn').textContent = '已投票';
+                
+                // 禁用所有节目选择
+                document.querySelectorAll('.program-item').forEach(item => {
+                    item.style.cursor = 'not-allowed';
+                    item.style.opacity = '0.7';
+                    item.classList.remove('selected');
+                });
+            } else {
+                document.getElementById('voteBtn').textContent = '提交投票';
+            }
+        }
+        
+        // 处理重置票数
+        function handleResetVotes() {
+            if (confirm('确定要重置所有票数吗？此操作不可撤销！')) {
+                DatabaseAPI.resetVotes();
+                updateDisplay();
+                checkVoteStatus();
+                alert('所有票数已重置！');
+            }
+        }
+        
+        // 处理清除投票状态
+        function handleClearStorage() {
+            if (confirm('确定要清除投票状态吗？用户将可以重新投票。')) {
+                DatabaseAPI.clearVoteStatus();
+                checkVoteStatus();
+                initializeProgramList();
+                alert('投票状态已清除！');
+            }
+        }
+        
+        // 处理添加节目
+        function handleAddProgram() {
+            const programName = prompt('请输入新节目名称：');
+            if (programName && programName.trim() !== '') {
+                DatabaseAPI.addProgram(programName.trim());
+                // 完全更新所有显示
+                recreateChart();
+                updateVoteCount();
+                initializeProgramList();
+                updateProgramManagerList();
+                checkVoteStatus();
+                alert('节目添加成功！现在可以在图表中看到新节目了。');
+            }
+        }
+        
+        // 处理删除节目（选择删除）
+        function handleDeleteProgram() {
+            const programs = DatabaseAPI.getPrograms();
+            
+            if (programs.length === 0) {
+                alert('当前没有节目可以删除！');
+                return;
+            }
+            
+            let programList = '请选择要删除的节目：\n\n';
+            programs.forEach((program, index) => {
+                programList += `${index + 1}. ${program.name} (${program.votes}票)\n`;
+            });
+            
+            const choice = prompt(programList + '\n请输入节目编号：');
+            if (choice && !isNaN(choice)) {
+                const index = parseInt(choice) - 1;
+                if (index >= 0 && index < programs.length) {
+                    const programId = programs[index].id;
+                    handleDeleteSpecificProgram(programId);
+                } else {
+                    alert('无效的节目编号！');
+                }
+            }
+        }
+        
+        // 处理删除特定节目
+        function handleDeleteSpecificProgram(programId) {
+            const programs = DatabaseAPI.getPrograms();
+            const program = programs.find(p => p.id === programId);
+            
+            if (program && confirm(`确定要删除节目"${program.name}"吗？此操作不可撤销！`)) {
+                const result = DatabaseAPI.deleteProgram(programId);
+                if (result.success) {
+                    // 完全更新所有显示
+                    recreateChart();
+                    updateVoteCount();
+                    initializeProgramList();
+                    updateProgramManagerList();
+                    checkVoteStatus();
+                    
+                    // 如果删除的是当前选中的节目，清除选择
+                    if (selectedProgramId === programId) {
+                        selectedProgramId = null;
+                        document.getElementById('voteBtn').disabled = true;
+                    }
+                    
+                    alert(result.message);
+                } else {
+                    alert(result.message);
+                }
+            }
+        }
+        
+        // 处理导出数据
+        function handleExportData() {
+            DatabaseAPI.exportData();
+        }
+    </script>
+</body>
+</html>
