@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中秋晚会节目投票系统</title>
+    <title>中秋晚会节目投票系统 - 管理后台</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -283,6 +283,47 @@
         .delete-program-btn:hover {
             background: #c0392b;
         }
+
+        .page-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .page-link {
+            background: #9b59b6;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .page-link:hover {
+            background: #8e44ad;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .page-link.screen {
+            background: #e67e22;
+        }
+        
+        .page-link.screen:hover {
+            background: #d35400;
+        }
+        
+        .page-link.vote {
+            background: #2ecc71;
+        }
+        
+        .page-link.vote:hover {
+            background: #27ae60;
+        }
         
         @media (max-width: 768px) {
             .main-content {
@@ -300,39 +341,54 @@
             .vote-count {
                 grid-template-columns: repeat(2, 1fr);
             }
+            
+            .page-links {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>中秋晚会节目投票系统</h1>
-            <p class="description">请选择您最喜欢的节目进行投票，实时结果将在大屏幕显示</p>
+            <h1>中秋晚会节目投票系统 - 管理后台</h1>
+            <p class="description">管理员控制面板 - 用于管理节目和查看数据</p>
         </header>
+        
+        <div class="page-links">
+            <a href="vote.html" class="page-link vote">📱 观众投票页面</a>
+            <a href="screen.html" class="page-link screen">📺 大屏幕显示页面</a>
+        </div>
         
         <div class="main-content">
             <section class="voting-section">
-                <h2>投票区</h2>
-                <p>请选择一个您最喜欢的节目：</p>
+                <h2>投票预览区</h2>
+                <p>此区域仅用于预览，观众请使用专用投票页面</p>
                 
                 <div class="program-list" id="programList">
                     <!-- 节目列表将通过JavaScript动态生成 -->
                 </div>
                 
-                <button class="vote-btn" id="voteBtn" disabled>提交投票</button>
+                <button class="vote-btn" id="voteBtn" disabled>提交投票（预览）</button>
                 
                 <div class="instructions">
-                    <p><strong>投票说明：</strong></p>
-                    <p>1. 每个设备只能投票一次</p>
-                    <p>2. 投票后无法更改选择</p>
-                    <p>3. 结果将实时在大屏幕更新</p>
-                    <p>4. 如果显示"已投票"，请点击下方"清除投票状态"</p>
+                    <p><strong>管理员说明：</strong></p>
+                    <p>• 观众请扫描下方二维码投票</p>
+                    <p>• 大屏幕请打开 screen.html</p>
+                    <p>• 管理功能在下方控制面板</p>
                 </div>
                 
                 <div class="qr-code">
                     <p>扫描二维码参与投票</p>
                     <img src="中秋晚会节目投票系统.jpg" alt="中秋晚会投票二维码" style="width:150px;height:150px;border-radius:10px;">
-                    <p style="font-size:0.8rem;margin-top:10px;">如果二维码无法识别，请将网页部署到互联网</p>
+                    <p style="font-size:0.8rem;margin-top:10px;">
+                        <strong>投票链接：</strong><br>
+                        https://chenchuang11.github.io/mid-autumn-vote/vote.html
+                    </p>
+                    <p style="font-size:0.8rem;margin-top:5px;color:#f1c40f;">
+                        <strong>大屏幕链接：</strong><br>
+                        https://chenchuang11.github.io/mid-autumn-vote/screen.html
+                    </p>
                 </div>
             </section>
             
@@ -370,7 +426,10 @@
             </div>
             
             <div style="margin-top:15px;padding:10px;background:rgba(255,255,255,0.1);border-radius:5px;">
-                <p><strong>部署说明：</strong>如需微信扫码，请将网页上传到GitHub Pages或Netlify</p>
+                <p><strong>页面说明：</strong></p>
+                <p>• <strong>观众投票</strong>：请使用 vote.html 页面或扫描二维码</p>
+                <p>• <strong>大屏幕显示</strong>：请使用 screen.html 页面全屏显示</p>
+                <p>• <strong>管理后台</strong>：当前页面，用于节目管理和数据查看</p>
             </div>
         </section>
     </div>
@@ -813,7 +872,7 @@
                     item.classList.remove('selected');
                 });
             } else {
-                document.getElementById('voteBtn').textContent = '提交投票';
+                document.getElementById('voteBtn').textContent = '提交投票（预览）';
             }
         }
         
@@ -912,5 +971,4 @@
         }
     </script>
 </body>
-
 </html>
