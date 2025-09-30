@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中秋晚会投票结果 - 大屏幕</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>中秋晚会节目投票</title>
     <style>
         * {
             margin: 0;
@@ -18,225 +17,250 @@
             color: white;
             min-height: 100vh;
             padding: 20px;
-            overflow-x: hidden;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 500px;
             margin: 0 auto;
         }
         
         header {
             text-align: center;
-            padding: 40px 0;
-            margin-bottom: 40px;
+            padding: 30px 0;
+            margin-bottom: 20px;
         }
         
         h1 {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .subtitle {
-            font-size: 2rem;
+            font-size: 1.2rem;
             opacity: 0.9;
         }
         
-        .main-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 40px;
-            align-items: start;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 600px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-        
-        .stats-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .total-votes {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .total-number {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #f1c40f;
-            margin-bottom: 10px;
-        }
-        
-        .total-label {
-            font-size: 1.5rem;
-            opacity: 0.9;
-        }
-        
-        .vote-count {
+        .program-list {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-height: 400px;
-            overflow-y: auto;
+            margin: 30px 0;
         }
         
-        .vote-count-item {
+        .program-item {
             background: rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .vote-count-item:hover {
-            transform: translateY(-3px);
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .vote-count-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #f1c40f;
-            margin-bottom: 5px;
-        }
-        
-        .vote-count-name {
-            font-size: 1.2rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .status-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
         }
         
-        .last-update {
+        .program-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+        
+        .program-item.selected {
+            background: rgba(46, 204, 113, 0.4);
+            border: 3px solid #2ecc71;
+            transform: translateY(-3px);
+        }
+        
+        .program-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            flex: 1;
+        }
+        
+        .program-votes {
+            font-size: 1.1rem;
+            color: #f1c40f;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+        
+        .vote-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 50px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            margin: 30px 0;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .vote-btn:hover {
+            background: #27ae60;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .vote-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .vote-success {
+            text-align: center;
+            padding: 60px 20px;
+            display: none;
+        }
+        
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+        }
+        
+        .success-title {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            color: #2ecc71;
+        }
+        
+        .success-message {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            margin: 10px;
+            transition: all 0.3s ease;
             font-size: 1.1rem;
         }
         
-        .auto-refresh {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .refresh-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .refresh-btn:hover {
+        .back-link:hover {
             background: #2980b9;
             transform: translateY(-2px);
         }
         
-        .pulse {
-            animation: pulse 1.5s infinite;
+        .instructions {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
         }
         
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
         }
         
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid white;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .selected-program {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(46, 204, 113, 0.2);
+            border-radius: 10px;
+            display: none;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
             }
             
             h1 {
-                font-size: 3rem;
+                font-size: 1.8rem;
             }
             
-            .subtitle {
-                font-size: 1.5rem;
-            }
-            
-            .chart-container {
-                height: 400px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-            
-            .total-number {
-                font-size: 3rem;
-            }
-            
-            .chart-container {
-                height: 300px;
+            .program-item {
                 padding: 15px;
+            }
+            
+            .vote-btn {
+                padding: 18px 25px;
+                font-size: 1.2rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>中秋晚会节目投票</h1>
-            <p class="subtitle">实时投票结果</p>
-        </header>
-        
-        <div class="main-content">
-            <div class="chart-container">
-                <canvas id="resultsChart"></canvas>
+        <!-- 投票区域 -->
+        <div id="votingSection">
+            <header>
+                <h1>中秋晚会节目投票</h1>
+                <p class="subtitle">请选择您最喜欢的节目</p>
+            </header>
+            
+            <div class="selected-program" id="selectedProgram">
+                您选择了：<strong id="selectedProgramName"></strong>
             </div>
             
-            <div class="stats-sidebar">
-                <div class="total-votes">
-                    <div class="total-number" id="totalVotes">0</div>
-                    <div class="total-label">总投票数</div>
-                </div>
-                
-                <div class="vote-count" id="voteCount">
-                    <!-- 票数统计动态生成 -->
-                </div>
+            <div class="program-list" id="programList">
+                <!-- 节目列表动态生成 -->
+            </div>
+            
+            <button class="vote-btn" id="voteBtn" disabled>点击提交投票</button>
+            
+            <div class="instructions">
+                <p><strong>投票说明：</strong></p>
+                <p>• 点击选择您最喜欢的节目</p>
+                <p>• 选择后点击"提交投票"按钮</p>
+                <p>• 每个设备只能投票一次</p>
+                <p>• 投票后无法更改选择</p>
             </div>
         </div>
         
-        <div class="status-bar">
-            <div class="last-update">
-                最后更新: <span id="updateTime" class="pulse">正在加载...</span>
-            </div>
-            <div class="auto-refresh">
-                <span>自动更新: <span id="refreshStatus">已开启</span></span>
-                <button class="refresh-btn" onclick="updateDisplay()">立即刷新</button>
+        <!-- 加载中 -->
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <p style="font-size: 1.2rem;">正在提交投票...</p>
+        </div>
+        
+        <!-- 投票成功 -->
+        <div class="vote-success" id="voteSuccess">
+            <div class="success-icon">🎉</div>
+            <h2 class="success-title">投票成功！</h2>
+            <p class="success-message">感谢您参与中秋晚会节目投票</p>
+            <p style="opacity:0.8; margin-bottom: 25px; font-size: 1.1rem;">
+                您已成功为 "<span id="votedProgramName" style="color:#f1c40f;"></span>" 投票
+            </p>
+            <div>
+                <a href="screen.html" class="back-link">查看实时投票结果</a>
+                <a href="index.html" class="back-link" style="background:#9b59b6;">返回首页</a>
             </div>
         </div>
     </div>
 
     <script>
-        let resultsChart = null;
-        let autoRefreshInterval = null;
-
-        // 获取节目数据
+        // 从localStorage获取节目数据
         function getPrograms() {
             const data = localStorage.getItem('voteSystemData');
             if (data) {
@@ -256,180 +280,130 @@
             }
         }
 
-        // 初始化图表
-        function initializeChart() {
-            const ctx = document.getElementById('resultsChart').getContext('2d');
-            const programs = getPrograms();
-            
-            const colors = generateColors(programs.length);
-            
-            resultsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: programs.map(p => p.name),
-                    datasets: [{
-                        label: '得票数',
-                        data: programs.map(p => p.votes),
-                        backgroundColor: colors.bgColors,
-                        borderColor: colors.brColors,
-                        borderWidth: 2,
-                        borderRadius: 5,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: 'white',
-                                precision: 0,
-                                font: { size: 16, weight: 'bold' }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: 'white',
-                                maxRotation: 45,
-                                minRotation: 0,
-                                font: { size: 14 }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: 'white',
-                                font: { size: 16, weight: 'bold' }
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            });
+        // 检查是否已投票
+        function hasVoted() {
+            return localStorage.getItem('hasVoted') === 'true';
         }
 
-        // 更新显示
-        function updateDisplay() {
-            const programs = getPrograms();
-            const totalVotes = programs.reduce((sum, program) => sum + program.votes, 0);
-            
-            // 更新总票数
-            document.getElementById('totalVotes').textContent = totalVotes;
-            
-            // 更新图表
-            if (resultsChart) {
-                resultsChart.data.datasets[0].data = programs.map(p => p.votes);
-                resultsChart.update();
+        // 标记已投票
+        function setVoted() {
+            localStorage.setItem('hasVoted', 'true');
+        }
+
+        // 投票功能
+        function voteForProgram(programId) {
+            if (hasVoted()) {
+                return { success: false, message: "您已经投过票了！" };
             }
-            
-            // 更新票数统计
-            updateVoteCount();
-            
-            // 更新最后更新时间
-            const now = new Date();
-            document.getElementById('updateTime').textContent = now.toLocaleString();
-            document.getElementById('updateTime').classList.add('pulse');
-            
-            // 移除脉冲动画
-            setTimeout(() => {
-                document.getElementById('updateTime').classList.remove('pulse');
-            }, 2000);
-        }
 
-        // 更新票数统计
-        function updateVoteCount() {
-            const voteCount = document.getElementById('voteCount');
             const programs = getPrograms();
+            const program = programs.find(p => p.id === programId);
             
-            // 按票数排序
-            const sortedPrograms = [...programs].sort((a, b) => b.votes - a.votes);
-            
-            voteCount.innerHTML = '';
-            sortedPrograms.forEach(program => {
-                const voteCountItem = document.createElement('div');
-                voteCountItem.className = 'vote-count-item';
-                voteCountItem.innerHTML = `
-                    <div class="vote-count-number">${program.votes}</div>
-                    <div class="vote-count-name">${program.name}</div>
-                `;
-                voteCount.appendChild(voteCountItem);
-            });
-        }
-
-        // 生成颜色
-        function generateColors(count) {
-            const colors = [
-                'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)',
-                'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)',
-                'rgba(199, 199, 199, 0.8)', 'rgba(83, 102, 255, 0.8)', 'rgba(40, 159, 64, 0.8)'
-            ];
-            const borderColors = [
-                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
-                'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)', 'rgba(40, 159, 64, 1)'
-            ];
-            
-            return {
-                bgColors: colors.slice(0, count),
-                brColors: borderColors.slice(0, count)
-            };
-        }
-
-        // 监听存储变化
-        function setupStorageListener() {
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'voteSystemData' || e.key === 'lastVoteTime') {
-                    updateDisplay();
-                }
-            });
-        }
-
-        // 开始自动刷新
-        function startAutoRefresh() {
-            autoRefreshInterval = setInterval(updateDisplay, 2000);
-        }
-
-        // 停止自动刷新
-        function stopAutoRefresh() {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-                autoRefreshInterval = null;
+            if (program) {
+                program.votes += 1;
+                localStorage.setItem('voteSystemData', JSON.stringify(programs));
+                setVoted();
+                return { 
+                    success: true, 
+                    message: "投票成功！",
+                    programName: program.name
+                };
             }
+            return { success: false, message: "节目不存在！" };
         }
 
-        // 初始化
+        // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChart();
-            updateDisplay();
-            setupStorageListener();
-            startAutoRefresh();
+            const programs = getPrograms();
+            const programList = document.getElementById('programList');
+            const voteBtn = document.getElementById('voteBtn');
+            const voteSuccess = document.getElementById('voteSuccess');
+            const votingSection = document.getElementById('votingSection');
+            const loadingSection = document.getElementById('loadingSection');
+            const selectedProgram = document.getElementById('selectedProgram');
+            const selectedProgramName = document.getElementById('selectedProgramName');
+            const votedProgramName = document.getElementById('votedProgramName');
             
-            // 全屏提示
-            console.log('建议按 F11 键进入全屏模式以获得最佳显示效果');
-        });
+            let selectedProgramId = null;
+            let selectedProgramNameText = '';
 
-        // 页面可见性变化时处理自动刷新
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                stopAutoRefresh();
-                document.getElementById('refreshStatus').textContent = '已暂停';
-            } else {
-                startAutoRefresh();
-                document.getElementById('refreshStatus').textContent = '已开启';
-                updateDisplay(); // 重新显示时立即更新
+            // 如果已投票，显示成功页面
+            if (hasVoted()) {
+                votingSection.style.display = 'none';
+                loadingSection.style.display = 'none';
+                voteSuccess.style.display = 'block';
+                // 显示投票的节目名称
+                const lastVoted = localStorage.getItem('lastVotedProgram');
+                if (lastVoted) {
+                    votedProgramName.textContent = lastVoted;
+                }
+                return;
             }
+
+            // 生成节目列表
+            programs.forEach(program => {
+                const programItem = document.createElement('div');
+                programItem.className = 'program-item';
+                programItem.dataset.id = program.id;
+                programItem.dataset.name = program.name;
+                
+                programItem.innerHTML = `
+                    <div class="program-name">${program.name}</div>
+                    <div class="program-votes">${program.votes}票</div>
+                `;
+                
+                programItem.addEventListener('click', function() {
+                    // 清除其他选择
+                    document.querySelectorAll('.program-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    // 选择当前项目
+                    programItem.classList.add('selected');
+                    selectedProgramId = program.id;
+                    selectedProgramNameText = program.name;
+                    
+                    // 显示选择的节目
+                    selectedProgramName.textContent = program.name;
+                    selectedProgram.style.display = 'block';
+                    
+                    // 启用投票按钮
+                    voteBtn.disabled = false;
+                    voteBtn.textContent = `为"${program.name}"投票`;
+                });
+                
+                programList.appendChild(programItem);
+            });
+
+            // 投票按钮点击事件
+            voteBtn.addEventListener('click', function() {
+                if (selectedProgramId) {
+                    // 显示加载中
+                    votingSection.style.display = 'none';
+                    loadingSection.style.display = 'block';
+                    
+                    // 模拟网络延迟
+                    setTimeout(function() {
+                        const result = voteForProgram(selectedProgramId);
+                        if (result.success) {
+                            // 记录投票的节目名称
+                            localStorage.setItem('lastVotedProgram', result.programName);
+                            
+                            loadingSection.style.display = 'none';
+                            voteSuccess.style.display = 'block';
+                            votedProgramName.textContent = result.programName;
+                            
+                            // 触发存储事件，通知其他页面更新
+                            window.dispatchEvent(new Event('storage'));
+                            localStorage.setItem('lastVoteTime', Date.now().toString());
+                        } else {
+                            // 投票失败，返回投票页面
+                            alert(result.message);
+                            loadingSection.style.display = 'none';
+                            votingSection.style.display = 'block';
+                        }
+                    }, 1500);
+                }
+            });
         });
     </script>
 </body>
