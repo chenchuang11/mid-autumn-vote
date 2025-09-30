@@ -135,21 +135,36 @@
             margin-bottom: 30px;
         }
         
-        .back-link {
+        .action-links {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .action-link {
             display: inline-block;
             background: #3498db;
             color: white;
             text-decoration: none;
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 25px;
-            margin: 10px;
             transition: all 0.3s ease;
             font-size: 1.1rem;
         }
         
-        .back-link:hover {
+        .action-link:hover {
             background: #2980b9;
             transform: translateY(-2px);
+        }
+        
+        .action-link.screen {
+            background: #e67e22;
+        }
+        
+        .action-link.screen:hover {
+            background: #d35400;
         }
         
         .instructions {
@@ -158,6 +173,7 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             font-size: 1rem;
+            text-align: center;
         }
         
         .loading {
@@ -190,6 +206,24 @@
             display: none;
         }
         
+        .current-votes {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .vote-count-badge {
+            display: inline-block;
+            background: #f1c40f;
+            color: #2c3e50;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
         @media (max-width: 480px) {
             .container {
                 padding: 10px;
@@ -207,6 +241,16 @@
                 padding: 18px 25px;
                 font-size: 1.2rem;
             }
+            
+            .action-links {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-link {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -219,6 +263,10 @@
                 <p class="subtitle">请选择您最喜欢的节目</p>
             </header>
             
+            <div class="current-votes">
+                <p>当前总投票数：<span class="vote-count-badge" id="totalVotes">0</span></p>
+            </div>
+            
             <div class="selected-program" id="selectedProgram">
                 您选择了：<strong id="selectedProgramName"></strong>
             </div>
@@ -230,11 +278,15 @@
             <button class="vote-btn" id="voteBtn" disabled>点击提交投票</button>
             
             <div class="instructions">
-                <p><strong>投票说明：</strong></p>
+                <p><strong>投票说明</strong></p>
                 <p>• 点击选择您最喜欢的节目</p>
                 <p>• 选择后点击"提交投票"按钮</p>
                 <p>• 每个设备只能投票一次</p>
                 <p>• 投票后无法更改选择</p>
+            </div>
+            
+            <div class="action-links">
+                <a href="screen.html" class="action-link screen">📺 查看实时投票结果</a>
             </div>
         </div>
         
@@ -252,9 +304,10 @@
             <p style="opacity:0.8; margin-bottom: 25px; font-size: 1.1rem;">
                 您已成功为 "<span id="votedProgramName" style="color:#f1c40f;"></span>" 投票
             </p>
-            <div>
-                <a href="screen.html" class="back-link">查看实时投票结果</a>
-                <a href="index.html" class="back-link" style="background:#9b59b6;">返回首页</a>
+            
+            <div class="action-links">
+                <a href="screen.html" class="action-link screen">📺 查看实时投票结果</a>
+                <a href="vote.html" class="action-link">🔄 重新投票（新设备）</a>
             </div>
         </div>
     </div>
@@ -312,6 +365,13 @@
             return { success: false, message: "节目不存在！" };
         }
 
+        // 更新总票数显示
+        function updateTotalVotes() {
+            const programs = getPrograms();
+            const totalVotes = programs.reduce((sum, program) => sum + program.votes, 0);
+            document.getElementById('totalVotes').textContent = totalVotes;
+        }
+
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
             const programs = getPrograms();
@@ -326,6 +386,9 @@
             
             let selectedProgramId = null;
             let selectedProgramNameText = '';
+
+            // 更新总票数
+            updateTotalVotes();
 
             // 如果已投票，显示成功页面
             if (hasVoted()) {
@@ -403,6 +466,21 @@
                         }
                     }, 1500);
                 }
+            });
+
+            // 监听数据变化，实时更新票数显示
+            window.addEventListener('storage', function() {
+                updateTotalVotes();
+                
+                // 更新节目票数显示
+                const updatedPrograms = getPrograms();
+                document.querySelectorAll('.program-item').forEach(item => {
+                    const programId = parseInt(item.dataset.id);
+                    const program = updatedPrograms.find(p => p.id === programId);
+                    if (program) {
+                        item.querySelector('.program-votes').textContent = `${program.votes}票`;
+                    }
+                });
             });
         });
     </script>
