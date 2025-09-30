@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中秋晚会投票结果 - 大屏幕</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stats-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .total-votes {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .total-number {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 10px;
+        }
+        
+        .total-label {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+        
+        .vote-count {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .vote-count-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .vote-count-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .vote-count-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 5px;
+        }
+        
+        .vote-count-name {
+            font-size: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        
+        .last-update {
+            font-size: 1.1rem;
+        }
+        
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .subtitle {
+                font-size: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .total-number {
+                font-size: 3rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>中秋晚会节目投票</h1>
+            <p class="subtitle">实时投票结果</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+            
+            <div class="stats-sidebar">
+                <div class="total-votes">
+                    <div class="total-number" id="totalVotes">0</div>
+                    <div class="total-label">总投票数</div>
+                </div>
+                
+                <div class="vote-count" id="voteCount">
+                    <!-- 票数统计动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="last-update">
+                最后更新: <span id="updateTime" class="pulse">正在加载...</span>
+            </div>
+            <div class="auto-refresh">
+                <span>自动更新: <span id="refreshStatus">已开启</span></span>
+                <button class="refresh-btn" onclick="updateDisplay()">立即刷新</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let resultsChart = null;
+        let autoRefreshInterval = null;
+
+        // 获取节目数据
+        function getPrograms() {
+            const data = localStorage.getItem('voteSystemData');
+            if (data) {
+                return JSON.parse(data);
+            } else {
+                // 默认节目数据
+                const defaultPrograms = [
+                    { id: 1, name: "开场舞蹈《欢乐颂》", votes: 0 },
+                    { id: 2, name: "歌曲演唱《夜空中最亮的星》", votes: 0 },
+                    { id: 3, name: "小品《办公室趣事》", votes: 0 },
+                    { id: 4, name: "乐器演奏《月光下的凤尾竹》", votes: 0 },
+                    { id: 5, name: "魔术表演《奇幻世界》", votes: 0 },
+                    { id: 6, name: "诗歌朗诵《青春万岁》", votes: 0 }
+                ];
+                localStorage.setItem('voteSystemData', JSON.stringify(defaultPrograms));
+                return defaultPrograms;
+            }
+        }
+
+        // 初始化图表
+        function initializeChart() {
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            const programs = getPrograms();
+            
+            const colors = generateColors(programs.length);
+            
+            resultsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: programs.map(p => p.name),
+                    datasets: [{
+                        label: '得票数',
+                        data: programs.map(p => p.votes),
+                        backgroundColor: colors.bgColors,
+                        borderColor: colors.brColors,
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'white',
+                                precision: 0,
+                                font: { size: 16, weight: 'bold' }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'white',
+                                maxRotation: 45,
+                                minRotation: 0,
+                                font: { size: 14 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white',
+                                font: { size: 16, weight: 'bold' }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            const programs = getPrograms();
+            const totalVotes = programs.reduce((sum, program) => sum + program.votes, 0);
+            
+            // 更新总票数
+            document.getElementById('totalVotes').textContent = totalVotes;
+            
+            // 更新图表
+            if (resultsChart) {
+                resultsChart.data.datasets[0].data = programs.map(p => p.votes);
+                resultsChart.update();
+            }
+            
+            // 更新票数统计
+            updateVoteCount();
+            
+            // 更新最后更新时间
+            const now = new Date();
+            document.getElementById('updateTime').textContent = now.toLocaleString();
+            document.getElementById('updateTime').classList.add('pulse');
+            
+            // 移除脉冲动画
+            setTimeout(() => {
+                document.getElementById('updateTime').classList.remove('pulse');
+            }, 2000);
+        }
+
+        // 更新票数统计
+        function updateVoteCount() {
+            const voteCount = document.getElementById('voteCount');
+            const programs = getPrograms();
+            
+            // 按票数排序
+            const sortedPrograms = [...programs].sort((a, b) => b.votes - a.votes);
+            
+            voteCount.innerHTML = '';
+            sortedPrograms.forEach(program => {
+                const voteCountItem = document.createElement('div');
+                voteCountItem.className = 'vote-count-item';
+                voteCountItem.innerHTML = `
+                    <div class="vote-count-number">${program.votes}</div>
+                    <div class="vote-count-name">${program.name}</div>
+                `;
+                voteCount.appendChild(voteCountItem);
+            });
+        }
+
+        // 生成颜色
+        function generateColors(count) {
+            const colors = [
+                'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)',
+                'rgba(199, 199, 199, 0.8)', 'rgba(83, 102, 255, 0.8)', 'rgba(40, 159, 64, 0.8)'
+            ];
+            const borderColors = [
+                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+                'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)', 'rgba(40, 159, 64, 1)'
+            ];
+            
+            return {
+                bgColors: colors.slice(0, count),
+                brColors: borderColors.slice(0, count)
+            };
+        }
+
+        // 监听存储变化
+        function setupStorageListener() {
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'voteSystemData' || e.key === 'lastVoteTime') {
+                    updateDisplay();
+                }
+            });
+        }
+
+        // 开始自动刷新
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(updateDisplay, 2000);
+        }
+
+        // 停止自动刷新
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart();
+            updateDisplay();
+            setupStorageListener();
+            startAutoRefresh();
+            
+            // 全屏提示
+            console.log('建议按 F11 键进入全屏模式以获得最佳显示效果');
+        });
+
+        // 页面可见性变化时处理自动刷新
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopAutoRefresh();
+                document.getElementById('refreshStatus').textContent = '已暂停';
+            } else {
+                startAutoRefresh();
+                document.getElementById('refreshStatus').textContent = '已开启';
+                updateDisplay(); // 重新显示时立即更新
+            }
+        });
+    </script>
+</body>
+</html>
